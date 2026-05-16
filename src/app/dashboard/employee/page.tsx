@@ -50,12 +50,18 @@ export default async function EmployeeDashboard() {
           <div className="space-y-3">
             {goals.map(goal => (
               <div key={goal.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                <div>
-                  <p className="font-medium text-gray-800 text-sm">{goal.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{goal.thrust_area} · {goal.weightage}% weight</p>
-                </div>
-                <StatusBadge status={goal.status} />
-              </div>
+  <div>
+    <p className="font-medium text-gray-800 text-sm">{goal.title}</p>
+    <p className="text-xs text-gray-500 mt-0.5">{goal.thrust_area} · {goal.weightage}% weight</p>
+    {goal.status === 'rejected' && (
+      <a href={`/dashboard/employee/goals/edit/${goal.id}`}
+        className="text-xs text-red-500 hover:text-red-700 underline mt-1 inline-block">
+        ✏️ Edit & Resubmit
+      </a>
+    )}
+  </div>
+  <StatusBadge status={goal.status} />
+</div>
             ))}
           </div>
         )}
