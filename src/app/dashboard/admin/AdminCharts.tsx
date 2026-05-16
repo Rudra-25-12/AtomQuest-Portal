@@ -1,87 +1,116 @@
 'use client'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer
-} from 'recharts'
 import { useState } from 'react'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  PieChart, Pie, Cell, ResponsiveContainer, Legend
+} from 'recharts'
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+const COLORS = ['#34d399', '#fbbf24', '#60a5fa', '#f87171', '#a78bfa']
 
-export default function AdminCharts({
-  deptStats, quarterStats, escalations, managerStats, summary, allProfiles, allGoals, allCheckins
-}: {
-  deptStats: any[]
-  quarterStats: any[]
-  escalations: any
-  managerStats: any[]
-  summary: any
-  allProfiles: any[]
-  allGoals: any[]
-  allCheckins: any[]
+const darkTooltip = {
+  contentStyle: { background: '#1e2433', border: '1px solid #2a3347', borderRadius: 8, color: '#e2e8f0' },
+  labelStyle: { color: '#94a3b8' },
+}
+
+export default function AdminCharts({ deptStats, quarterStats, escalations, managerStats, summary, allProfiles, allGoals, allCheckins }: {
+  deptStats: any[], quarterStats: any[], escalations: any,
+  managerStats: any[], summary: any, allProfiles: any[], allGoals: any[], allCheckins: any[]
 }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'charts' | 'escalations' | 'employees'>('overview')
 
   const goalStatusData = [
     { name: 'Approved', value: allGoals.filter(g => g.status === 'approved').length },
-    { name: 'Submitted', value: allGoals.filter(g => g.status === 'submitted').length },
+    { name: 'Pending', value: allGoals.filter(g => g.status === 'submitted').length },
     { name: 'Draft', value: allGoals.filter(g => g.status === 'draft').length },
     { name: 'Rejected', value: allGoals.filter(g => g.status === 'rejected').length },
   ].filter(d => d.value > 0)
 
   const employees = allProfiles.filter(p => p.role === 'employee')
+  const totalEscalations = escalations.noGoals.length + escalations.pendingApproval.length + escalations.noCheckins.length
+
+  const tabs = ['overview', 'charts', 'escalations', 'employees'] as const
 
   return (
-    <div>
+    <>
+      <style>{`
+        .tab-btn { transition: all 0.15s ease; }
+        .dark-table tr:hover td { background: #242d3f; }
+        .dark-table td, .dark-table th { transition: background 0.15s; }
+      `}</style>
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Active Quarter:
-            <span className="ml-1 font-semibold text-blue-600">{summary.activeQuarter}</span>
-            <span className={`ml-3 text-xs px-2 py-0.5 rounded-full font-medium ${summary.goalSettingOpen ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+          <p className="text-sm font-medium mb-1" style={{ color: '#fbbf24' }}>Admin Panel</p>
+          <h1 className="text-3xl font-black" style={{ color: '#f1f5f9' }}>Overview</h1>
+          <div className="flex items-center gap-3 mt-2">
+            <span className="text-sm" style={{ color: '#475569' }}>Active Quarter:</span>
+            <span className="text-sm font-bold px-2 py-0.5 rounded-lg"
+              style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>
+              {summary.activeQuarter}
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{
+                background: summary.goalSettingOpen ? 'rgba(52,211,153,0.12)' : 'rgba(100,116,139,0.12)',
+                color: summary.goalSettingOpen ? '#34d399' : '#64748b'
+              }}>
               Goal Setting {summary.goalSettingOpen ? 'Open' : 'Closed'}
             </span>
-          </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <a href="/dashboard/admin/reports"
-            className="bg-green-600 text-white text-xs px-4 py-2 rounded-lg hover:bg-green-700 transition">
+            className="px-4 py-2 rounded-xl text-sm font-bold transition-all"
+            style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }}>
             ⬇ Export CSV
           </a>
           <a href="/dashboard/admin/cycle"
-            className="bg-blue-600 text-white text-xs px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-            ⚙ Cycle Settings
+            className="px-4 py-2 rounded-xl text-sm font-bold"
+            style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)' }}>
+            ⚙ Cycle
           </a>
         </div>
       </div>
 
-      {/* Summary cards */}
+      {/* Stat cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <StatCard label="Employees" value={summary.employees} color="blue" />
-        <StatCard label="Total Goals" value={summary.totalGoals} color="gray" />
-        <StatCard label="Approved" value={summary.approvedGoals} color="green" />
-        <StatCard label="Pending" value={summary.pendingGoals} sub={summary.pendingGoals > 0 ? '⚠ needs action' : '✓ all clear'} color={summary.pendingGoals > 0 ? 'yellow' : 'green'} />
+        {[
+          { label: 'Employees', value: summary.employees, color: '#60a5fa', sub: 'registered' },
+          { label: 'Total Goals', value: summary.totalGoals, color: '#94a3b8', sub: 'across all employees' },
+          { label: 'Approved', value: summary.approvedGoals, color: '#34d399', sub: 'goals locked in' },
+          { label: 'Pending', value: summary.pendingGoals, color: summary.pendingGoals > 0 ? '#fbbf24' : '#34d399', sub: summary.pendingGoals > 0 ? '⚠ needs action' : '✓ all clear' },
+        ].map(s => (
+          <div key={s.label} className="rounded-2xl p-5"
+            style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
+            <p className="text-xs font-medium mb-3" style={{ color: '#475569' }}>{s.label}</p>
+            <p className="text-3xl font-black mb-1" style={{ color: s.color }}>{s.value}</p>
+            <p className="text-xs" style={{ color: '#334155' }}>{s.sub}</p>
+          </div>
+        ))}
       </div>
 
       {/* Escalation banner */}
-      {(escalations.noGoals.length > 0 || escalations.pendingApproval.length > 0 || escalations.noCheckins.length > 0) && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
-          <p className="text-sm font-semibold text-red-700 mb-2">⚠ Escalation Alerts</p>
-          <div className="flex flex-wrap gap-3">
+      {totalEscalations > 0 && (
+        <div className="rounded-2xl p-4 mb-6"
+          style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)' }}>
+          <p className="text-sm font-bold mb-2" style={{ color: '#f87171' }}>⚠ Escalation Alerts</p>
+          <div className="flex flex-wrap gap-2">
             {escalations.noGoals.length > 0 && (
-              <span className="text-xs bg-red-100 text-red-600 px-3 py-1 rounded-full">
-                {escalations.noGoals.length} employee{escalations.noGoals.length > 1 ? 's' : ''} haven't submitted goals
+              <span className="text-xs px-3 py-1 rounded-full"
+                style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
+                {escalations.noGoals.length} employees with no goals
               </span>
             )}
             {escalations.pendingApproval.length > 0 && (
-              <span className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full">
-                {escalations.pendingApproval.length} awaiting manager approval
+              <span className="text-xs px-3 py-1 rounded-full"
+                style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24' }}>
+                {escalations.pendingApproval.length} awaiting approval
               </span>
             )}
             {escalations.noCheckins.length > 0 && (
-              <span className="text-xs bg-orange-100 text-orange-600 px-3 py-1 rounded-full">
-                {escalations.noCheckins.length} with no check-ins yet
+              <span className="text-xs px-3 py-1 rounded-full"
+                style={{ background: 'rgba(251,146,60,0.1)', color: '#fb923c' }}>
+                {escalations.noCheckins.length} with no check-ins
               </span>
             )}
           </div>
@@ -89,10 +118,15 @@ export default function AdminCharts({
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
-        {(['overview', 'charts', 'escalations', 'employees'] as const).map(tab => (
+      <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit"
+        style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
+        {tabs.map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition ${activeTab === tab ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            className="tab-btn px-4 py-1.5 rounded-lg text-sm font-medium capitalize"
+            style={{
+              background: activeTab === tab ? '#2a3347' : 'transparent',
+              color: activeTab === tab ? '#fbbf24' : '#475569',
+            }}>
             {tab}
           </button>
         ))}
@@ -100,139 +134,128 @@ export default function AdminCharts({
 
       {/* Overview tab */}
       {activeTab === 'overview' && (
-        <div className="space-y-4">
-          {/* Department table */}
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="font-semibold text-gray-800">Employee Goal Status</h2>
-              <div className="flex gap-2">
-                <a href="/dashboard/admin/reports" className="text-xs text-blue-600 hover:underline">Reports →</a>
-                <a href="/dashboard/admin/audit" className="text-xs text-gray-400 hover:underline ml-3">Audit Log →</a>
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>
-                    {['Employee', 'Department', 'Manager', 'Goals', 'Approved', 'Check-ins', 'Status'].map(h => (
-                      <th key={h} className="text-left px-6 py-3 text-xs font-medium text-gray-500">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {employees.map(emp => {
-                    const empGoals = allGoals.filter(g => g.employee_id === emp.id)
-                    const approved = empGoals.filter(g => g.status === 'approved').length
-                    const empCheckins = allCheckins.filter(c => empGoals.some(g => g.id === c.goal_id)).length
-                    const manager = allProfiles.find(p => p.id === emp.manager_id)
-                    const fullyApproved = empGoals.length > 0 && approved === empGoals.length
-                    return (
-                      <tr key={emp.id} className="hover:bg-gray-50 transition">
-                        <td className="px-6 py-4 font-medium text-gray-800">{emp.name}</td>
-                        <td className="px-6 py-4 text-gray-500">{emp.department}</td>
-                        <td className="px-6 py-4 text-gray-500">{manager?.name ?? '—'}</td>
-                        <td className="px-6 py-4 text-center">{empGoals.length}</td>
-                        <td className="px-6 py-4 text-center text-green-600 font-medium">{approved}</td>
-                        <td className="px-6 py-4 text-center text-blue-600">{empCheckins}</td>
-                        <td className="px-6 py-4">
-                          {empGoals.length === 0
-                            ? <Badge label="No Goals" color="gray" />
-                            : fullyApproved
-                            ? <Badge label="✓ Complete" color="green" />
-                            : <Badge label="Pending" color="yellow" />}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+        <div className="rounded-2xl overflow-hidden"
+          style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
+          <div className="flex items-center justify-between px-6 py-4"
+            style={{ borderBottom: '1px solid #2a3347' }}>
+            <h2 className="font-bold" style={{ color: '#f1f5f9' }}>Employee Goal Status</h2>
+            <div className="flex gap-3">
+              <a href="/dashboard/admin/reports" className="text-xs font-medium"
+                style={{ color: '#60a5fa' }}>Reports →</a>
+              <a href="/dashboard/admin/audit" className="text-xs font-medium"
+                style={{ color: '#475569' }}>Audit Log →</a>
             </div>
           </div>
+          <table className="w-full text-sm dark-table">
+            <thead>
+              <tr style={{ borderBottom: '1px solid #2a3347' }}>
+                {['Employee', 'Department', 'Manager', 'Goals', 'Approved', 'Check-ins', 'Status'].map(h => (
+                  <th key={h} className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: '#334155' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {employees.map(emp => {
+                const empGoals = allGoals.filter(g => g.employee_id === emp.id)
+                const approv = empGoals.filter(g => g.status === 'approved').length
+                const checkins = allCheckins.filter(c => empGoals.some(g => g.id === c.goal_id)).length
+                const manager = allProfiles.find(p => p.id === emp.manager_id)
+                const done = empGoals.length > 0 && approv === empGoals.length
+                return (
+                  <tr key={emp.id} style={{ borderBottom: '1px solid #1a2030' }}>
+                    <td className="px-6 py-4 font-semibold" style={{ color: '#e2e8f0' }}>{emp.name}</td>
+                    <td className="px-6 py-4" style={{ color: '#475569' }}>{emp.department}</td>
+                    <td className="px-6 py-4" style={{ color: '#475569' }}>{manager?.name ?? '—'}</td>
+                    <td className="px-6 py-4 text-center" style={{ color: '#94a3b8' }}>{empGoals.length}</td>
+                    <td className="px-6 py-4 text-center font-bold" style={{ color: '#34d399' }}>{approv}</td>
+                    <td className="px-6 py-4 text-center" style={{ color: '#60a5fa' }}>{checkins}</td>
+                    <td className="px-6 py-4">
+                      {empGoals.length === 0
+                        ? <Badge label="No Goals" color="#64748b" bg="rgba(100,116,139,0.12)" />
+                        : done
+                        ? <Badge label="✓ Complete" color="#34d399" bg="rgba(52,211,153,0.12)" />
+                        : <Badge label="Pending" color="#fbbf24" bg="rgba(251,191,36,0.12)" />}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* Charts tab */}
       {activeTab === 'charts' && (
         <div className="space-y-6">
-          {/* Goal status pie + dept bar side by side */}
           <div className="grid grid-cols-2 gap-6">
-            <div className="bg-white border border-gray-200 rounded-2xl p-6">
-              <h3 className="font-semibold text-gray-800 mb-4">Goal Status Distribution</h3>
+            <div className="rounded-2xl p-6" style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
+              <h3 className="font-bold mb-4" style={{ color: '#f1f5f9' }}>Goal Status Distribution</h3>
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={goalStatusData} cx="50%" cy="50%" outerRadius={80}
-                    dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                    {goalStatusData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
+                  <Pie data={goalStatusData} cx="50%" cy="50%" outerRadius={80} dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}>
+                    {goalStatusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip {...darkTooltip} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-
-            <div className="bg-white border border-gray-200 rounded-2xl p-6">
-              <h3 className="font-semibold text-gray-800 mb-4">Goals by Department</h3>
+            <div className="rounded-2xl p-6" style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
+              <h3 className="font-bold mb-4" style={{ color: '#f1f5f9' }}>Goals by Department</h3>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={deptStats}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="dept" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="approved" name="Approved" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="submitted" name="Pending" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a3347" />
+                  <XAxis dataKey="dept" tick={{ fill: '#475569', fontSize: 11 }} />
+                  <YAxis tick={{ fill: '#475569', fontSize: 11 }} />
+                  <Tooltip {...darkTooltip} />
+                  <Legend wrapperStyle={{ color: '#94a3b8' }} />
+                  <Bar dataKey="approved" name="Approved" fill="#34d399" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="submitted" name="Pending" fill="#fbbf24" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Quarter checkin progress */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
-            <h3 className="font-semibold text-gray-800 mb-4">Quarter-on-Quarter Check-in Progress</h3>
+          <div className="rounded-2xl p-6" style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
+            <h3 className="font-bold mb-4" style={{ color: '#f1f5f9' }}>Quarter-on-Quarter Check-in Progress</h3>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={quarterStats}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="quarter" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="completed" name="Completed" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="onTrack" name="On Track" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="notStarted" name="Not Started" fill="#e5e7eb" radius={[4, 4, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2a3347" />
+                <XAxis dataKey="quarter" tick={{ fill: '#475569' }} />
+                <YAxis tick={{ fill: '#475569' }} />
+                <Tooltip {...darkTooltip} />
+                <Legend wrapperStyle={{ color: '#94a3b8' }} />
+                <Bar dataKey="completed" name="Completed" fill="#34d399" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="onTrack" name="On Track" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="notStarted" name="Not Started" fill="#2a3347" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Manager effectiveness */}
           {managerStats.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-2xl p-6">
-              <h3 className="font-semibold text-gray-800 mb-4">Manager Effectiveness</h3>
+            <div className="rounded-2xl p-6" style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
+              <h3 className="font-bold mb-4" style={{ color: '#f1f5f9' }}>Manager Effectiveness</h3>
               <div className="space-y-3">
                 {managerStats.map((m, i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-xl"
+                    style={{ background: '#242d3f' }}>
                     <div className="w-32 shrink-0">
-                      <p className="text-sm font-medium text-gray-800">{m.name}</p>
-                      <p className="text-xs text-gray-400">{m.teamSize} reports</p>
+                      <p className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>{m.name}</p>
+                      <p className="text-xs" style={{ color: '#475569' }}>{m.teamSize} reports</p>
                     </div>
                     <div className="flex-1 grid grid-cols-3 gap-4 text-center">
                       <div>
-                        <p className="text-xs text-gray-400">Approved</p>
-                        <p className="font-bold text-green-600">{m.approved}</p>
+                        <p className="text-xs mb-1" style={{ color: '#475569' }}>Approved</p>
+                        <p className="font-bold" style={{ color: '#34d399' }}>{m.approved}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400">Pending</p>
-                        <p className={`font-bold ${m.pending > 0 ? 'text-yellow-500' : 'text-gray-400'}`}>{m.pending}</p>
+                        <p className="text-xs mb-1" style={{ color: '#475569' }}>Pending</p>
+                        <p className="font-bold" style={{ color: m.pending > 0 ? '#fbbf24' : '#475569' }}>{m.pending}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400">Comments Given</p>
-                        <p className="font-bold text-blue-600">{m.checkinsDone}</p>
-                      </div>
-                    </div>
-                    <div className="w-24 shrink-0">
-                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 rounded-full"
-                          style={{ width: `${m.teamSize > 0 ? (m.approved / (m.teamSize * 8)) * 100 : 0}%` }} />
+                        <p className="text-xs mb-1" style={{ color: '#475569' }}>Comments</p>
+                        <p className="font-bold" style={{ color: '#60a5fa' }}>{m.checkinsDone}</p>
                       </div>
                     </div>
                   </div>
@@ -246,60 +269,79 @@ export default function AdminCharts({
       {/* Escalations tab */}
       {activeTab === 'escalations' && (
         <div className="space-y-4">
-          <EscalationCard
-            title="Employees with No Goals Submitted"
-            color="red"
-            icon="🚨"
-            people={escalations.noGoals}
-            emptyMsg="All employees have submitted goals ✓"
-          />
-          <EscalationCard
-            title="Goals Awaiting Manager Approval"
-            color="yellow"
-            icon="⏳"
-            people={escalations.pendingApproval}
-            emptyMsg="No pending approvals ✓"
-          />
-          <EscalationCard
-            title="Approved Goals with No Check-ins"
-            color="orange"
-            icon="📋"
-            people={escalations.noCheckins}
-            emptyMsg="All employees have started check-ins ✓"
-          />
+          {[
+            { title: 'No Goals Submitted', icon: '🚨', people: escalations.noGoals, color: '#f87171', bg: 'rgba(248,113,113,0.06)', border: 'rgba(248,113,113,0.2)', empty: 'All employees have submitted goals ✓' },
+            { title: 'Awaiting Manager Approval', icon: '⏳', people: escalations.pendingApproval, color: '#fbbf24', bg: 'rgba(251,191,36,0.06)', border: 'rgba(251,191,36,0.2)', empty: 'No pending approvals ✓' },
+            { title: 'No Check-ins Yet', icon: '📋', people: escalations.noCheckins, color: '#fb923c', bg: 'rgba(251,146,60,0.06)', border: 'rgba(251,146,60,0.2)', empty: 'All employees have started check-ins ✓' },
+          ].map(card => (
+            <div key={card.title} className="rounded-2xl p-6"
+              style={{ background: card.bg, border: `1px solid ${card.border}` }}>
+              <div className="flex items-center gap-2 mb-3">
+                <span>{card.icon}</span>
+                <h3 className="font-bold" style={{ color: card.color }}>{card.title}</h3>
+                {card.people.length > 0 && (
+                  <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: card.bg, color: card.color, border: `1px solid ${card.border}` }}>
+                    {card.people.length}
+                  </span>
+                )}
+              </div>
+              {card.people.length === 0
+                ? <p className="text-sm font-medium" style={{ color: '#34d399' }}>{card.empty}</p>
+                : (
+                  <div className="flex flex-wrap gap-2">
+                    {card.people.map((p: any) => (
+                      <span key={p.id} className="text-xs px-3 py-1 rounded-full"
+                        style={{ background: '#1e2433', color: '#94a3b8', border: '1px solid #2a3347' }}>
+                        {p.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+            </div>
+          ))}
         </div>
       )}
 
       {/* Employees tab */}
       {activeTab === 'employees' && (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
+        <div className="rounded-2xl overflow-hidden"
+          style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
+          <table className="w-full text-sm dark-table">
+            <thead>
+              <tr style={{ borderBottom: '1px solid #2a3347' }}>
                 {['Name', 'Role', 'Department', 'Manager', 'Goals', 'Status'].map(h => (
-                  <th key={h} className="text-left px-6 py-3 text-xs font-medium text-gray-500">{h}</th>
+                  <th key={h} className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: '#334155' }}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {allProfiles.map(p => {
                 const manager = allProfiles.find(m => m.id === p.manager_id)
                 const goals = allGoals.filter(g => g.employee_id === p.id)
+                const roleColors: Record<string, { color: string; bg: string }> = {
+                  admin:    { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
+                  manager:  { color: '#a78bfa', bg: 'rgba(139,92,246,0.12)' },
+                  employee: { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
+                }
+                const rc = roleColors[p.role] ?? roleColors.employee
                 return (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium text-gray-800">{p.name}</td>
+                  <tr key={p.id} style={{ borderBottom: '1px solid #1a2030' }}>
+                    <td className="px-6 py-4 font-semibold" style={{ color: '#e2e8f0' }}>{p.name}</td>
                     <td className="px-6 py-4">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${p.role === 'admin' ? 'bg-purple-100 text-purple-700' : p.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {p.role}
-                      </span>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold capitalize"
+                        style={{ background: rc.bg, color: rc.color }}>{p.role}</span>
                     </td>
-                    <td className="px-6 py-4 text-gray-500">{p.department ?? '—'}</td>
-                    <td className="px-6 py-4 text-gray-500">{manager?.name ?? '—'}</td>
-                    <td className="px-6 py-4 text-center text-gray-700">{goals.length}</td>
+                    <td className="px-6 py-4" style={{ color: '#475569' }}>{p.department ?? '—'}</td>
+                    <td className="px-6 py-4" style={{ color: '#475569' }}>{manager?.name ?? '—'}</td>
+                    <td className="px-6 py-4 text-center" style={{ color: '#94a3b8' }}>{goals.length}</td>
                     <td className="px-6 py-4">
-                      {goals.length === 0 ? <Badge label="No Goals" color="gray" />
-                        : goals.every(g => g.status === 'approved') ? <Badge label="✓ Done" color="green" />
-                        : <Badge label="In Progress" color="yellow" />}
+                      {goals.length === 0
+                        ? <Badge label="No Goals" color="#64748b" bg="rgba(100,116,139,0.12)" />
+                        : goals.every(g => g.status === 'approved')
+                        ? <Badge label="✓ Done" color="#34d399" bg="rgba(52,211,153,0.12)" />
+                        : <Badge label="In Progress" color="#fbbf24" bg="rgba(251,191,36,0.12)" />}
                     </td>
                   </tr>
                 )
@@ -308,66 +350,15 @@ export default function AdminCharts({
           </table>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
-function StatCard({ label, value, color, sub }: { label: string; value: number; color: string; sub?: string }) {
-  const colors: Record<string, string> = {
-    blue: 'text-blue-600', green: 'text-green-600', yellow: 'text-yellow-600', gray: 'text-gray-700'
-  }
+function Badge({ label, color, bg }: { label: string; color: string; bg: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-5">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className={`text-3xl font-bold mt-1 ${colors[color]}`}>{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
-    </div>
-  )
-}
-
-function Badge({ label, color }: { label: string; color: string }) {
-  const colors: Record<string, string> = {
-    green: 'bg-green-100 text-green-700',
-    yellow: 'bg-yellow-100 text-yellow-700',
-    gray: 'bg-gray-100 text-gray-500',
-    red: 'bg-red-100 text-red-600'
-  }
-  return <span className={`text-xs px-3 py-1 rounded-full font-medium ${colors[color]}`}>{label}</span>
-}
-
-function EscalationCard({ title, color, icon, people, emptyMsg }: {
-  title: string; color: string; icon: string; people: any[]; emptyMsg: string
-}) {
-  const colors: Record<string, string> = {
-    red: 'border-red-200 bg-red-50',
-    yellow: 'border-yellow-200 bg-yellow-50',
-    orange: 'border-orange-200 bg-orange-50'
-  }
-  const textColors: Record<string, string> = {
-    red: 'text-red-700', yellow: 'text-yellow-700', orange: 'text-orange-700'
-  }
-  return (
-    <div className={`border rounded-2xl p-6 ${colors[color]}`}>
-      <div className="flex items-center gap-2 mb-3">
-        <span>{icon}</span>
-        <h3 className={`font-semibold ${textColors[color]}`}>{title}</h3>
-        {people.length > 0 && (
-          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ml-auto ${textColors[color]} bg-white`}>
-            {people.length}
-          </span>
-        )}
-      </div>
-      {people.length === 0 ? (
-        <p className="text-sm text-green-600 font-medium">{emptyMsg}</p>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {people.map((p: any) => (
-            <span key={p.id} className="text-xs bg-white border border-gray-200 text-gray-700 px-3 py-1 rounded-full">
-              {p.name}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
+    <span className="text-xs px-3 py-1 rounded-full font-semibold"
+      style={{ background: bg, color }}>
+      {label}
+    </span>
   )
 }
