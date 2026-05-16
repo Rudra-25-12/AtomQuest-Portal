@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import * as THREE from "three";
 
 interface TubesBackgroundProps {
   children?: React.ReactNode;
@@ -15,40 +16,125 @@ export default function TubesBackground({ children }: TubesBackgroundProps) {
     const container = containerRef.current;
     if (!container) return;
 
-    const script = document.createElement("script");
-    script.type = "module";
-    script.textContent = `
-      import { Tubes } from "https://cdn.jsdelivr.net/npm/threejs-toys@0.0.8/build/threejs-toys.module.cdn.min.js";
+    // Scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
 
-      const container = document.getElementById("tubes-bg");
-      if (container) {
-        Tubes({
-          el: container,
-          background: 0x000000,
-          color: 0x4080ff,
-        });
-        window.dispatchEvent(new CustomEvent("tubes-loaded"));
-      }
-    `;
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      container.clientWidth / container.clientHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 30;
 
-    const handleLoaded = () => setIsLoading(false);
-    window.addEventListener("tubes-loaded", handleLoaded);
-    document.body.appendChild(script);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
 
-    // Fallback: hide loader after 3 seconds even if event doesn't fire
-    const timeout = setTimeout(() => setIsLoading(false), 3000);
+    // Create glowing yellow tubes
+    const tubes: THREE.Mesh[] = [];
+    const tubeCount = 15;
 
+    for (let i = 0; i < tubeCount; i++) {
+      const curve = new THREE.CatmullRomCurve3(
+        Array.from({ length: 5 }, () => 
+          new THREE.Vector3(
+            (Math.random() - 0.5) * 50,
+            (Math.random() - 0.5) * 50,
+            (Math.random() - 0.5) * 30
+          )
+        )
+      );
+
+      const geometry = new THREE.TubeGeometry(curve, 64, 0.3, 8, false);
+      // Yellow/gold color variations (hue 0.12-0.17 is yellow range)
+      const material = new THREE.MeshBasicMaterial({
+        color: new THREE.Color().setHSL(0.12 + Math.random() * 0.05, 1, 0.5),
+        transparent: true,
+        opacity: 0.8,
+      });
+
+      const tube = new THREE.Mesh(geometry, material);
+      tubes.push(tube);
+      scene.add(tube);
+    }
+
+    // Add ambient glow particles (yellow/gold)
+    const particlesGeometry = new THREE.BufferGeometry();
+    const particleCount = 200;
+    const positions = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i++) {
+      positions[i] = (Math.random() - 0.5) * 100;
+    }
+
+    particlesGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const particlesMaterial = new THREE.PointsMaterial({
+      color: 0xffcc00, // Yellow/gold particles
+      size: 0.2,
+      transparent: true,
+      opacity: 0.6,
+    });
+    const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+    scene.add(particles);
+
+    // Mouse interaction
+    const mouse = { x: 0, y: 0 };
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    // Animation loop
+    let animationId: number;
+    const animate = () => {
+      animationId = requestAnimationFrame(animate);
+
+      // Rotate tubes slowly
+      tubes.forEach((tube, i) => {
+        tube.rotation.x += 0.001 * (i % 2 === 0 ? 1 : -1);
+        tube.rotation.y += 0.002 * (i % 2 === 0 ? 1 : -1);
+      });
+
+      // Move camera based on mouse
+      camera.position.x += (mouse.x * 5 - camera.position.x) * 0.05;
+      camera.position.y += (mouse.y * 5 - camera.position.y) * 0.05;
+      camera.lookAt(scene.position);
+
+      // Rotate particles
+      particles.rotation.y += 0.0005;
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+    setIsLoading(false);
+
+    // Handle resize
+    const handleResize = () => {
+      if (!container) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    };
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup
     return () => {
-      window.removeEventListener("tubes-loaded", handleLoaded);
-      clearTimeout(timeout);
-      script.remove();
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animationId);
+      renderer.dispose();
+      container.removeChild(renderer.domElement);
     };
   }, []);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <div
-        id="tubes-bg"
         ref={containerRef}
         className="absolute inset-0 z-0"
       />
@@ -61,7 +147,7 @@ export default function TubesBackground({ children }: TubesBackgroundProps) {
             transition={{ duration: 0.5 }}
             className="absolute inset-0 z-10 flex items-center justify-center bg-black"
           >
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-yellow-400 border-t-transparent" />
           </motion.div>
         )}
       </AnimatePresence>
