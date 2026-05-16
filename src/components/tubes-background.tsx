@@ -20,23 +20,27 @@ export default function TubesBackground({ children }: TubesBackgroundProps) {
     script.textContent = `
       import { Tubes } from "https://cdn.jsdelivr.net/npm/threejs-toys@0.0.8/build/threejs-toys.module.cdn.min.js";
 
-      const container = document.getElementById("tubes-container");
+      const container = document.getElementById("tubes-bg");
       if (container) {
         Tubes({
           el: container,
           background: 0x000000,
           color: 0x4080ff,
         });
-        container.dispatchEvent(new CustomEvent("tubes-loaded"));
+        window.dispatchEvent(new CustomEvent("tubes-loaded"));
       }
     `;
 
     const handleLoaded = () => setIsLoading(false);
-    container.addEventListener("tubes-loaded", handleLoaded);
+    window.addEventListener("tubes-loaded", handleLoaded);
     document.body.appendChild(script);
 
+    // Fallback: hide loader after 3 seconds even if event doesn't fire
+    const timeout = setTimeout(() => setIsLoading(false), 3000);
+
     return () => {
-      container.removeEventListener("tubes-loaded", handleLoaded);
+      window.removeEventListener("tubes-loaded", handleLoaded);
+      clearTimeout(timeout);
       script.remove();
     };
   }, []);
@@ -44,7 +48,7 @@ export default function TubesBackground({ children }: TubesBackgroundProps) {
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <div
-        id="tubes-container"
+        id="tubes-bg"
         ref={containerRef}
         className="absolute inset-0 z-0"
       />
