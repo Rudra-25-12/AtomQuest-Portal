@@ -213,8 +213,7 @@ export default async function ManagerDashboard() {
             <a key={l.href} href={l.href}
               className="rounded-2xl p-5 block transition-all"
               style={{ background: '#1e2433', border: '1px solid #2a3347' }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = l.color + '44'}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = '#2a3347'}>
+            >
               <p className="text-2xl mb-3">{l.icon}</p>
               <p className="font-bold text-sm mb-1" style={{ color: '#e2e8f0' }}>{l.label}</p>
               <p className="text-xs" style={{ color: '#475569' }}>{l.desc}</p>
