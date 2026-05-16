@@ -17,10 +17,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="min-h-screen flex" style={{ background: '#0f172a' }}>
       <SidebarClient profile={profile} />
       <main className="flex-1 overflow-auto" style={{ background: '#0f172a' }}>
-        <div className="p-8 max-w-6xl mx-auto">
-          {children}
-        </div>
-      </main>
+  <div className="p-8 max-w-6xl mx-auto">
+    {children}
+  </div>
+</main>
     </div>
   )
 }

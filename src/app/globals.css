@@ -138,3 +138,13 @@
 body {
   background-color: #f8fafc;
 }
+/* Global dark theme overrides for all dashboard cards */
+.dash-card {
+  background: #1e2433 !important;
+  border: 1px solid #2a3347 !important;
+  color: #e2e8f0 !important;
+}
+
+.dash-card p, .dash-card span, .dash-card td, .dash-card th {
+  color: inherit;
+}
