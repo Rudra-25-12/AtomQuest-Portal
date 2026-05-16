@@ -74,7 +74,6 @@ export default function NewGoalPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
-    // Check existing goals count
     const { count } = await supabase
       .from('goals')
       .select('*', { count: 'exact', head: true })
@@ -103,6 +102,12 @@ export default function NewGoalPage() {
       setError('Something went wrong. Try again.')
       setSubmitting(false)
     } else {
+      // Email AFTER inserts is defined and insert succeeded
+      await fetch('/api/email/submitted', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employeeId: user.id, goalCount: inserts.length })
+      })
       router.push('/dashboard/employee')
       router.refresh()
     }
@@ -115,7 +120,6 @@ export default function NewGoalPage() {
         <p className="text-gray-500 text-sm mt-1">Add up to 8 goals. Total weightage must equal 100%.</p>
       </div>
 
-      {/* Weightage tracker */}
       <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-6 flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-500">Total Weightage</p>
@@ -132,7 +136,6 @@ export default function NewGoalPage() {
         </div>
       </div>
 
-      {/* Progress bar */}
       <div className="h-2 bg-gray-100 rounded-full mb-6 overflow-hidden">
         <div
           className={`h-full rounded-full transition-all ${totalWeightage > 100 ? 'bg-red-400' : weightageValid ? 'bg-green-500' : 'bg-blue-500'}`}
@@ -140,7 +143,6 @@ export default function NewGoalPage() {
         />
       </div>
 
-      {/* Goal cards */}
       <div className="space-y-4">
         {goals.map((goal, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-2xl p-6">
@@ -148,87 +150,62 @@ export default function NewGoalPage() {
               <h3 className="font-semibold text-gray-700">Goal {index + 1}</h3>
               {goals.length > 1 && (
                 <button onClick={() => removeGoal(index)}
-                  className="text-xs text-red-400 hover:text-red-600 transition">
-                  Remove
-                </button>
+                  className="text-xs text-red-400 hover:text-red-600 transition">Remove</button>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Goal Title *</label>
-                <input
-                  value={goal.title}
-                  onChange={e => updateGoal(index, 'title', e.target.value)}
+                <input value={goal.title} onChange={e => updateGoal(index, 'title', e.target.value)}
                   placeholder="e.g. Increase quarterly sales revenue"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
 
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
-                <textarea
-                  value={goal.description}
-                  onChange={e => updateGoal(index, 'description', e.target.value)}
-                  placeholder="Brief description of this goal..."
-                  rows={2}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                />
+                <textarea value={goal.description} onChange={e => updateGoal(index, 'description', e.target.value)}
+                  placeholder="Brief description of this goal..." rows={2}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Thrust Area *</label>
-                <select
-                  value={goal.thrust_area}
-                  onChange={e => updateGoal(index, 'thrust_area', e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
+                <select value={goal.thrust_area} onChange={e => updateGoal(index, 'thrust_area', e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                   {THRUST_AREAS.map(a => <option key={a}>{a}</option>)}
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Unit of Measurement *</label>
-                <select
-                  value={goal.uom_type}
-                  onChange={e => updateGoal(index, 'uom_type', e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
+                <select value={goal.uom_type} onChange={e => updateGoal(index, 'uom_type', e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                   {UOM_TYPES.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Target *</label>
-                <input
-                  value={goal.target}
-                  onChange={e => updateGoal(index, 'target', e.target.value)}
+                <input value={goal.target} onChange={e => updateGoal(index, 'target', e.target.value)}
                   placeholder={goal.uom_type === 'timeline' ? 'e.g. 30 (days)' : 'e.g. 500000'}
                   type="number"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   Weightage % * <span className="text-gray-400">(min 10%)</span>
                 </label>
-                <input
-                  value={goal.weightage}
-                  onChange={e => updateGoal(index, 'weightage', e.target.value)}
-                  placeholder="e.g. 25"
-                  type="number"
-                  min={10}
-                  max={100}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <input value={goal.weightage} onChange={e => updateGoal(index, 'weightage', e.target.value)}
+                  placeholder="e.g. 25" type="number" min={10} max={100}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Add goal button */}
       {canAddMore && (
         <button onClick={addGoal}
           className="mt-4 w-full border-2 border-dashed border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-500 rounded-2xl py-4 text-sm font-medium transition">
@@ -236,22 +213,16 @@ export default function NewGoalPage() {
         </button>
       )}
 
-      {/* Error */}
       {error && (
-        <div className="mt-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-4">
-          {error}
-        </div>
+        <div className="mt-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-4">{error}</div>
       )}
 
-      {/* Actions */}
       <div className="mt-6 flex gap-3 justify-end">
         <button onClick={() => router.back()}
           className="px-5 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
           Cancel
         </button>
-        <button
-          onClick={handleSubmit}
-          disabled={submitting}
+        <button onClick={handleSubmit} disabled={submitting}
           className="px-6 py-2.5 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-60 font-medium">
           {submitting ? 'Submitting...' : 'Submit Goals for Approval'}
         </button>

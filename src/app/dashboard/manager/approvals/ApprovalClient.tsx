@@ -38,7 +38,6 @@ export default function ApprovalClient({ goals, teamMembers }: {
     ? goals
     : goals.filter(g => g.employee_id === selectedEmployee)
 
-  // Group by employee
   const grouped = filtered.reduce<Record<string, Goal[]>>((acc, g) => {
     if (!acc[g.employee_name]) acc[g.employee_name] = []
     acc[g.employee_name].push(g)
@@ -49,7 +48,6 @@ export default function ApprovalClient({ goals, teamMembers }: {
     setLoading(goalId)
     await supabase.from('goals').update({ status: 'approved' }).eq('id', goalId)
 
-    // Audit log
     const { data: { user } } = await supabase.auth.getUser()
     await supabase.from('audit_logs').insert({
       entity_type: 'goal', entity_id: goalId,
@@ -57,15 +55,22 @@ export default function ApprovalClient({ goals, teamMembers }: {
       change_description: 'Goal approved by manager'
     })
 
+    const goal = goals.find(g => g.id === goalId)
+    if (goal) {
+      await fetch('/api/email/approved', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goalId, employeeId: goal.employee_id })
+      })
+    }
+
     setLoading(null)
     router.refresh()
   }
 
   const handleReject = async (goalId: string) => {
     setLoading(goalId)
-    await supabase.from('goals').update({
-      status: 'rejected',
-    }).eq('id', goalId)
+    await supabase.from('goals').update({ status: 'rejected' }).eq('id', goalId)
 
     const { data: { user } } = await supabase.auth.getUser()
     await supabase.from('audit_logs').insert({
@@ -73,6 +78,19 @@ export default function ApprovalClient({ goals, teamMembers }: {
       changed_by: user?.id,
       change_description: `Goal rejected. Note: ${rejectNote[goalId] || 'No note provided'}`
     })
+
+    const goal = goals.find(g => g.id === goalId)
+    if (goal) {
+      await fetch('/api/email/rejected', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          goalId,
+          employeeId: goal.employee_id,
+          note: rejectNote[goalId] || ''
+        })
+      })
+    }
 
     setLoading(null)
     router.refresh()
@@ -111,16 +129,13 @@ export default function ApprovalClient({ goals, teamMembers }: {
         <p className="text-gray-500 text-sm mt-1">Review, edit and approve your team's goals</p>
       </div>
 
-      {/* Filter by employee */}
       <div className="flex gap-2 mb-6 flex-wrap">
-        <button
-          onClick={() => setSelectedEmployee('all')}
+        <button onClick={() => setSelectedEmployee('all')}
           className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${selectedEmployee === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
           All Team
         </button>
         {teamMembers.map(m => (
-          <button key={m.id}
-            onClick={() => setSelectedEmployee(m.id)}
+          <button key={m.id} onClick={() => setSelectedEmployee(m.id)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${selectedEmployee === m.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {m.name}
           </button>
@@ -140,7 +155,6 @@ export default function ApprovalClient({ goals, teamMembers }: {
 
           return (
             <div key={employeeName} className="bg-white border border-gray-200 rounded-2xl mb-6 overflow-hidden">
-              {/* Employee header */}
               <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200">
                 <div>
                   <p className="font-semibold text-gray-800">{employeeName}</p>
@@ -152,13 +166,10 @@ export default function ApprovalClient({ goals, teamMembers }: {
                   </p>
                 </div>
                 {allApproved && (
-                  <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-medium">
-                    ✓ All Approved
-                  </span>
+                  <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-medium">✓ All Approved</span>
                 )}
               </div>
 
-              {/* Goals */}
               <div className="divide-y divide-gray-100">
                 {empGoals.map(goal => (
                   <div key={goal.id} className="p-6">
@@ -174,7 +185,7 @@ export default function ApprovalClient({ goals, teamMembers }: {
                         <div className="flex gap-4 text-xs text-gray-500">
                           <span>🎯 {goal.thrust_area}</span>
                           <span>📊 {uomLabel[goal.uom_type]}</span>
-                          {editingGoal === goal.id ? null : (
+                          {editingGoal !== goal.id && (
                             <>
                               <span>Target: <strong>{goal.target}</strong></span>
                               <span>Weight: <strong>{goal.weightage}%</strong></span>
@@ -182,66 +193,50 @@ export default function ApprovalClient({ goals, teamMembers }: {
                           )}
                         </div>
 
-                        {/* Inline edit */}
                         {editingGoal === goal.id && (
                           <div className="mt-3 flex gap-3 items-end">
                             <div>
                               <label className="block text-xs text-gray-500 mb-1">Target</label>
                               <input type="number" value={editValues.target}
                                 onChange={e => setEditValues(v => ({ ...v, target: e.target.value }))}
-                                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
+                                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                             </div>
                             <div>
                               <label className="block text-xs text-gray-500 mb-1">Weightage %</label>
                               <input type="number" value={editValues.weightage}
                                 onChange={e => setEditValues(v => ({ ...v, weightage: e.target.value }))}
-                                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
+                                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                             </div>
-                            <button onClick={() => handleSaveEdit(goal.id)}
-                              disabled={loading === goal.id}
+                            <button onClick={() => handleSaveEdit(goal.id)} disabled={loading === goal.id}
                               className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700 transition">
                               Save
                             </button>
                             <button onClick={() => setEditingGoal(null)}
-                              className="text-xs text-gray-400 hover:text-gray-600">
-                              Cancel
-                            </button>
+                              className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
                           </div>
                         )}
 
-                        {/* Reject note */}
                         {goal.status === 'submitted' && (
                           <input
                             placeholder="Rejection note (optional)..."
                             value={rejectNote[goal.id] ?? ''}
                             onChange={e => setRejectNote(r => ({ ...r, [goal.id]: e.target.value }))}
-                            className="mt-3 w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-300 text-gray-600"
-                          />
+                            className="mt-3 w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-300 text-gray-600" />
                         )}
                       </div>
 
-                      {/* Action buttons */}
                       {goal.status === 'submitted' && (
                         <div className="flex flex-col gap-2 shrink-0">
                           <button
-                            onClick={() => {
-                              setEditingGoal(goal.id)
-                              setEditValues({ target: String(goal.target), weightage: String(goal.weightage) })
-                            }}
+                            onClick={() => { setEditingGoal(goal.id); setEditValues({ target: String(goal.target), weightage: String(goal.weightage) }) }}
                             className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition">
                             ✏️ Edit
                           </button>
-                          <button
-                            onClick={() => handleApprove(goal.id)}
-                            disabled={loading === goal.id}
+                          <button onClick={() => handleApprove(goal.id)} disabled={loading === goal.id}
                             className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-60">
                             ✓ Approve
                           </button>
-                          <button
-                            onClick={() => handleReject(goal.id)}
-                            disabled={loading === goal.id}
+                          <button onClick={() => handleReject(goal.id)} disabled={loading === goal.id}
                             className="text-xs px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-60">
                             ✗ Reject
                           </button>
