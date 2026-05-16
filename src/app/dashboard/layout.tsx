@@ -33,6 +33,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <NavLink href="/dashboard/manager">Team Dashboard</NavLink>
               <NavLink href="/dashboard/manager/approvals">Approvals</NavLink>
               <NavLink href="/dashboard/manager/checkins">Check-ins</NavLink>
+              <NavLink href="/dashboard/manager/shared">Push Shared Goal</NavLink>
             </>
           )}
           {profile?.role === 'admin' && (

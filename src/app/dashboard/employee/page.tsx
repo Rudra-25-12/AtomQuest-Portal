@@ -49,20 +49,31 @@ export default async function EmployeeDashboard() {
         ) : (
           <div className="space-y-3">
             {goals.map(goal => (
-              <div key={goal.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-  <div>
-    <p className="font-medium text-gray-800 text-sm">{goal.title}</p>
-    <p className="text-xs text-gray-500 mt-0.5">{goal.thrust_area} · {goal.weightage}% weight</p>
-    {goal.status === 'rejected' && (
-      <a href={`/dashboard/employee/goals/edit/${goal.id}`}
-        className="text-xs text-red-500 hover:text-red-700 underline mt-1 inline-block">
-        ✏️ Edit & Resubmit
-      </a>
-    )}
+  <div key={goal.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+    <div className="flex-1">
+      <div className="flex items-center gap-2">
+        <p className="font-medium text-gray-800 text-sm">{goal.title}</p>
+        {goal.is_shared && (
+          <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-medium">Shared</span>
+        )}
+      </div>
+      <p className="text-xs text-gray-500 mt-0.5">{goal.thrust_area} · {goal.weightage}% weight</p>
+      {goal.status === 'rejected' && (
+        <a href={`/dashboard/employee/goals/edit/${goal.id}`}
+          className="text-xs text-red-500 hover:text-red-700 underline mt-1 inline-block">
+          ✏️ Edit & Resubmit
+        </a>
+      )}
+      {goal.is_shared && goal.status === 'approved' && (
+        <a href={`/dashboard/employee/goals/shared/${goal.id}`}
+          className="text-xs text-purple-500 hover:text-purple-700 underline mt-1 inline-block">
+          ⚖️ Adjust Weightage
+        </a>
+      )}
+    </div>
+    <StatusBadge status={goal.status} />
   </div>
-  <StatusBadge status={goal.status} />
-</div>
-            ))}
+))}
           </div>
         )}
       </div>
