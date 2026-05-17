@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, usePathname } from 'next/navigation'
+import AtomQuestLogo from '../../public/atomquest-logo.png'
 
 const employeeLinks = [
   { href: '/dashboard/employee', label: 'My Goals', icon: '🎯' },
@@ -59,7 +60,7 @@ export default function SidebarClient({ profile }: { profile: any }) {
         <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0"
           style={{ background: '#fbbf24' }}>
           <Image
-            src="/atomquest-logo.png"
+            src={AtomQuestLogo}
             alt="AQ"
             width={32}
             height={32}

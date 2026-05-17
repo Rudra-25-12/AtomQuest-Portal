@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import AtomQuestLogo from '../../../public/atomquest-logo.png'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -84,7 +85,7 @@ export default function LoginPage() {
             <div className="shimmer relative mb-8 rounded-3xl overflow-hidden p-1"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(251,191,36,0.2)' }}>
               <Image
-                src="/atomquest-logo.png"
+                src={AtomQuestLogo}
                 alt="AtomQuest"
                 width={280}
                 height={280}
@@ -117,7 +118,7 @@ export default function LoginPage() {
             {/* Mobile logo */}
             <div className="flex items-center gap-3 mb-10 lg:hidden">
               <Image
-                src="/atomquest-logo.png"
+                src={AtomQuestLogo}
                 alt="AtomQuest"
                 width={36}
                 height={36}
