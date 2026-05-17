@@ -63,28 +63,9 @@
 
 ## 🏗️ Architecture
 
-```
-Users (Employee / Manager / Admin)
-        │ HTTPS
-        ▼
-   Vercel (Next.js 14)
-   ├── App Router + Server Components
-   ├── Middleware — Auth guard, Role-based redirect
-   └── UI — Tailwind CSS, shadcn/ui, Recharts
-        │ Supabase JS SDK
-        ▼
-   Supabase
-   ├── PostgreSQL — profiles, goals, checkins, audit_logs, cycle_settings
-   ├── JWT Auth + Email/Password
-   └── Row Level Security
-       ├── Employee: own goals only
-       ├── Manager: team goals
-       └── Admin: all data
-        │
-        ▼
-   Resend — Email Notifications
-   Goal submitted → Manager | Approved/Rejected → Employee
-```
+
+![AtomQuest System Architecture](public/atomquest_architecture.png)
+
 
 ---
 
