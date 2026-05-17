@@ -76,7 +76,7 @@ export default function EditGoalClient({ goal }: { goal: any }) {
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
           <textarea value={description} onChange={e => setDescription(e.target.value)}
-            rows={2} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+            rows={2} className="textarea-match focus:ring-blue-500" />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>

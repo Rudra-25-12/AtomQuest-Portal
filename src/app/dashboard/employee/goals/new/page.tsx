@@ -113,8 +113,8 @@ export default function NewGoalPage() {
                 <label className="block text-xs font-medium mb-1.5" style={labelStyle}>Description</label>
                 <textarea value={goal.description} onChange={e=>update(i,'description',e.target.value)}
                   placeholder="Brief context for this goal..." rows={2}
-                  className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none resize-none"
-                  style={inputStyle}/>
+                  className="textarea-match"
+                  style={{ ...inputStyle, background: 'inherit' }}/>
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={labelStyle}>Thrust Area *</label>

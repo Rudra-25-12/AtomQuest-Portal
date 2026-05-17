@@ -117,7 +117,7 @@ export default function SharedGoalClient({ managerId, teamMembers }: {
           <label className="block text-xs font-medium text-[#f1f5f9] mb-1">Description</label>
           <textarea value={description} onChange={e => setDescription(e.target.value)}
             rows={2} placeholder="Context for this shared goal..."
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-[#243147] text-[#f1f5f9] placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#fbbf24] resize-none"
+            className="textarea-match focus:ring-[#fbbf24] text-[#f1f5f9]"
             style={{ borderColor: '#2a3347' }} />
         </div>
 
