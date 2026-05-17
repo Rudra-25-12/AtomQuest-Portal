@@ -3,115 +3,76 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4']
+const QUARTERS = ['Q1','Q2','Q3','Q4']
+const QUARTER_INFO:Record<string,string> = {Q1:'July — Progress Update',Q2:'October — Progress Update',Q3:'January — Progress Update',Q4:'March/April — Final Achievement'}
 
-const QUARTER_INFO: Record<string, string> = {
-  Q1: 'July — Progress Update',
-  Q2: 'October — Progress Update',
-  Q3: 'January — Progress Update',
-  Q4: 'March/April — Final Achievement',
-}
-
-export default function CycleClient({ cycle }: { cycle: any }) {
-  const [activeQuarter, setActiveQuarter] = useState(cycle?.active_quarter ?? 'Q1')
-  const [goalSettingOpen, setGoalSettingOpen] = useState(cycle?.goal_setting_open ?? true)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
+export default function CycleClient({cycle}:{cycle:any}) {
+  const [activeQ,setActiveQ] = useState(cycle?.active_quarter??'Q1')
+  const [open,setOpen] = useState(cycle?.goal_setting_open??true)
+  const [saving,setSaving] = useState(false)
+  const [saved,setSaved] = useState(false)
   const supabase = createClient()
   const router = useRouter()
 
   const handleSave = async () => {
     setSaving(true)
-    await supabase.from('cycle_settings').update({
-      active_quarter: activeQuarter,
-      goal_setting_open: goalSettingOpen,
-      updated_at: new Date().toISOString()
-    }).eq('id', 1)
-
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+    await supabase.from('cycle_settings').update({active_quarter:activeQ,goal_setting_open:open,updated_at:new Date().toISOString()}).eq('id',1)
+    setSaving(false); setSaved(true)
+    setTimeout(()=>setSaved(false),2500)
     router.refresh()
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Cycle Management</h1>
-        <p className="text-gray-500 text-sm mt-1">Control which quarter is active and whether goal setting is open</p>
+    <div className="max-w-2xl">
+      <div className="mb-8">
+        <p className="text-sm font-medium mb-1" style={{color:'#fbbf24'}}>Admin</p>
+        <h1 className="text-3xl font-black" style={{color:'#f1f5f9'}}>Cycle Management</h1>
+        <p className="text-sm mt-1" style={{color:'#475569'}}>Control active quarter and goal setting window</p>
       </div>
 
-      {/* Goal setting toggle */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-4">
-        <div className="flex items-center justify-between">
+      {/* Toggle */}
+      <div className="rounded-2xl p-6 mb-4" style={{background:'#1e2433',border:'1px solid #2a3347'}}>
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="font-semibold text-gray-800">Goal Setting Window</p>
-            <p className="text-sm text-gray-500 mt-0.5">Opens 1st May — allow employees to create and submit goals</p>
+            <p className="font-bold" style={{color:'#f1f5f9'}}>Goal Setting Window</p>
+            <p className="text-sm mt-0.5" style={{color:'#475569'}}>Allow employees to create and submit goals</p>
           </div>
-          <button
-            onClick={() => setGoalSettingOpen((o: boolean) => !o)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${goalSettingOpen ? 'bg-green-500' : 'bg-gray-300'}`}>
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow ${goalSettingOpen ? 'translate-x-6' : 'translate-x-1'}`} />
+          <button onClick={()=>setOpen((o:boolean)=>!o)}
+            className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+            style={{background:open?'#34d399':'#2a3347'}}>
+            <span className="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+              style={{transform:open?'translateX(24px)':'translateX(4px)'}}/>
           </button>
         </div>
-        <div className={`mt-3 text-xs px-3 py-2 rounded-lg font-medium ${goalSettingOpen ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
-          {goalSettingOpen ? '✓ Open — employees can create and submit goals' : '✗ Closed — goal creation is locked'}
+        <div className="rounded-xl px-4 py-2.5 text-xs font-medium"
+          style={{background:open?'rgba(52,211,153,0.08)':'rgba(100,116,139,0.08)',color:open?'#34d399':'#64748b',border:`1px solid ${open?'rgba(52,211,153,0.2)':'rgba(100,116,139,0.2)'}`}}>
+          {open?'✓ Open — employees can create and submit goals':'✗ Closed — goal creation is locked'}
         </div>
       </div>
 
-      {/* Active quarter selector */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-4">
-        <p className="font-semibold text-gray-800 mb-1">Active Check-in Quarter</p>
-        <p className="text-sm text-gray-500 mb-4">Only the active quarter window accepts achievement updates</p>
-
+      {/* Quarter selector */}
+      <div className="rounded-2xl p-6 mb-4" style={{background:'#1e2433',border:'1px solid #2a3347'}}>
+        <p className="font-bold mb-1" style={{color:'#f1f5f9'}}>Active Check-in Quarter</p>
+        <p className="text-sm mb-4" style={{color:'#475569'}}>Only this quarter accepts achievement updates</p>
         <div className="grid grid-cols-2 gap-3">
-          {QUARTERS.map(q => (
-            <button key={q} onClick={() => setActiveQuarter(q)}
-              className={`p-4 rounded-xl border-2 text-left transition ${activeQuarter === q
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'}`}>
-              <p className={`font-bold text-lg ${activeQuarter === q ? 'text-blue-600' : 'text-gray-700'}`}>{q}</p>
-              <p className={`text-xs mt-0.5 ${activeQuarter === q ? 'text-blue-500' : 'text-gray-400'}`}>
-                {QUARTER_INFO[q]}
-              </p>
-              {activeQuarter === q && (
-                <span className="inline-block mt-2 text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">Active</span>
-              )}
+          {QUARTERS.map(q=>(
+            <button key={q} onClick={()=>setActiveQ(q)}
+              className="p-4 rounded-xl text-left transition-all"
+              style={{border:`2px solid ${activeQ===q?'#fbbf24':'#2a3347'}`,background:activeQ===q?'rgba(251,191,36,0.08)':'transparent'}}>
+              <p className="font-black text-lg" style={{color:activeQ===q?'#fbbf24':'#64748b'}}>{q}</p>
+              <p className="text-xs mt-0.5" style={{color:activeQ===q?'#92400e':'#334155'}}>{QUARTER_INFO[q]}</p>
+              {activeQ===q&&<span className="inline-block mt-2 text-xs px-2 py-0.5 rounded-full font-bold" style={{background:'rgba(251,191,36,0.2)',color:'#fbbf24'}}>Active</span>}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Current status summary */}
-      <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-6">
-        <p className="text-xs font-medium text-gray-500 mb-2">CURRENT CYCLE STATUS</p>
-        <div className="flex gap-4">
-          <div>
-            <p className="text-xs text-gray-400">Goal Setting</p>
-            <p className={`text-sm font-semibold ${goalSettingOpen ? 'text-green-600' : 'text-gray-500'}`}>
-              {goalSettingOpen ? 'Open' : 'Closed'}
-            </p>
-          </div>
-          <div className="w-px bg-gray-200" />
-          <div>
-            <p className="text-xs text-gray-400">Active Quarter</p>
-            <p className="text-sm font-semibold text-blue-600">{activeQuarter}</p>
-          </div>
-          <div className="w-px bg-gray-200" />
-          <div>
-            <p className="text-xs text-gray-400">Last Updated</p>
-            <p className="text-sm font-semibold text-gray-600">
-              {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-            </p>
-          </div>
-        </div>
-      </div>
-
       <div className="flex justify-end items-center gap-4">
-        {saved && <p className="text-sm text-green-600 font-medium">✓ Cycle settings saved!</p>}
+        {saved&&<p className="text-sm font-medium" style={{color:'#34d399'}}>✓ Saved!</p>}
         <button onClick={handleSave} disabled={saving}
-          className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition disabled:opacity-60">
-          {saving ? 'Saving...' : 'Save Settings'}
+          className="px-6 py-2.5 rounded-xl text-sm font-bold disabled:opacity-60"
+          style={{background:'linear-gradient(135deg,#fbbf24,#f97316)',color:'#0a0a0a'}}>
+          {saving?'Saving...':'Save Settings'}
         </button>
       </div>
     </div>
