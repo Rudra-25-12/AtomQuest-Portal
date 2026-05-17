@@ -14,16 +14,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('id', user.id)
     .single()
 
-  // Handle case when profile is null
   const safeProfile = profile || { name: 'User', role: 'employee', department: 'General' }
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0f172a]">
       <SidebarClient profile={safeProfile} />
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-auto p-4 md:p-8">
+        {/* Extra top padding for mobile to avoid overlap with fixed top bar */}
+        <div className="flex-1 overflow-auto pt-14 md:pt-0 p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
             {children}
           </div>

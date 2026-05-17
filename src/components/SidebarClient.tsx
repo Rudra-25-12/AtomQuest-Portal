@@ -85,15 +85,16 @@ export default function SidebarClient({ profile }: { profile: Profile }) {
   return (
     <>
       {/* Mobile Top Bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-gray-900 border-b border-gray-800 z-50 px-4 py-3 flex items-center">
-        <button
-          onClick={() => setIsMobileOpen(true)}
-          className="text-white p-2 -ml-2"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-        <div className="ml-3 font-semibold">AtomQuest</div>
-      </div>
+      {/* Mobile Top Bar */}
+<div className="md:hidden fixed top-0 left-0 right-0 bg-gray-900 border-b border-gray-800 z-50 px-4 py-3 flex items-center">
+  <button
+    onClick={() => setIsMobileOpen(true)}
+    className="text-white p-2 -ml-2"
+  >
+    <Menu className="w-6 h-6" />
+  </button>
+  <div className="ml-3 font-bold text-lg text-white">AtomQuest</div>
+</div>
 
       {/* Sidebar */}
       <aside className={`fixed md:relative h-screen bg-gray-900 border-r border-[#252d3d] 
