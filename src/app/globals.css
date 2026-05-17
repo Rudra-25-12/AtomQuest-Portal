@@ -283,3 +283,19 @@ body {
     }
   }
 }
+/* Mobile Responsiveness */
+@layer utilities {
+  .sidebar-collapsed {
+    width: 80px;
+  }
+  
+  @media (max-width: 768px) {
+    .dashboard-content {
+      padding: 1rem;
+    }
+    
+    .goal-card {
+      margin-bottom: 1rem;
+    }
+  }
+}

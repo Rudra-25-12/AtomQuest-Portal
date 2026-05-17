@@ -14,21 +14,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('id', user.id)
     .single()
 
-  return (
-    <div className="min-h-screen flex" style={{ background: '#0f172a' }}>
-      <SidebarClient profile={profile} />
+  // Handle case when profile is null
+  const safeProfile = profile || { name: 'User', role: 'employee', department: 'General' }
 
-      <main
-        className="flex-1 overflow-auto"
-        style={{
-          background: '#0f172a',
-          backgroundImage:
-            'radial-gradient(rgba(251,191,36,0.03) 1px, transparent 1px)',
-          backgroundSize: '32px 32px',
-        }}
-      >
-        <div className="p-8 max-w-6xl mx-auto">
-          {children}
+  return (
+    <div className="flex h-screen overflow-hidden bg-[#0f172a]">
+      <SidebarClient profile={safeProfile} />
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-auto p-4 md:p-8">
+          <div className="max-w-6xl mx-auto">
+            {children}
+          </div>
         </div>
       </main>
     </div>
