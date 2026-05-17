@@ -23,7 +23,7 @@ export default function CycleClient({cycle}:{cycle:any}) {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div>
       <div className="mb-8">
         <p className="text-sm font-medium mb-1" style={{color:'#fbbf24'}}>Admin</p>
         <h1 className="text-3xl font-black" style={{color:'#f1f5f9'}}>Cycle Management</h1>
