@@ -108,7 +108,7 @@ export default function LoginPage() {
 
         {/* RIGHT PANEL — unchanged from before */}
         <div className="flex-1 flex items-center justify-center p-6" style={{ background: '#0a0a0a' }}>
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md glass-panel p-8">
 
             {/* Mobile logo */}
             <div className="flex items-center gap-3 mb-10 lg:hidden">

@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import AnimatedStatCards from '@/components/AnimatedStatCards'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell, ResponsiveContainer, Legend
@@ -42,7 +43,10 @@ export default function AdminCharts({ deptStats, quarterStats, escalations, mana
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-sm font-medium mb-1" style={{ color: '#fbbf24' }}>Admin Panel</p>
-          <h1 className="text-3xl font-black" style={{ color: '#f1f5f9' }}>Overview</h1>
+          <h1 className="text-3xl font-black"
+            style={{ color: '#f1f5f9', background: 'linear-gradient(135deg,#f1f5f9,#94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            Overview
+          </h1>
           <div className="flex items-center gap-3 mt-2">
             <span className="text-sm" style={{ color: '#475569' }}>Active Quarter:</span>
             <span className="text-sm font-bold px-2 py-0.5 rounded-lg"
@@ -73,21 +77,12 @@ export default function AdminCharts({ deptStats, quarterStats, escalations, mana
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        {[
-          { label: 'Employees', value: summary.employees, color: '#60a5fa', sub: 'registered' },
-          { label: 'Total Goals', value: summary.totalGoals, color: '#94a3b8', sub: 'across all employees' },
-          { label: 'Approved', value: summary.approvedGoals, color: '#34d399', sub: 'goals locked in' },
-          { label: 'Pending', value: summary.pendingGoals, color: summary.pendingGoals > 0 ? '#fbbf24' : '#34d399', sub: summary.pendingGoals > 0 ? '⚠ needs action' : '✓ all clear' },
-        ].map(s => (
-          <div key={s.label} className="rounded-2xl p-5"
-            style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
-            <p className="text-xs font-medium mb-3" style={{ color: '#475569' }}>{s.label}</p>
-            <p className="text-3xl font-black mb-1" style={{ color: s.color }}>{s.value}</p>
-            <p className="text-xs" style={{ color: '#334155' }}>{s.sub}</p>
-          </div>
-        ))}
-      </div>
+      <AnimatedStatCards cards={[
+        { label: 'Employees', value: summary.employees, color: '#60a5fa', sub: 'registered' },
+        { label: 'Total Goals', value: summary.totalGoals, color: '#94a3b8', sub: 'across all employees' },
+        { label: 'Approved', value: summary.approvedGoals, color: '#34d399', sub: 'goals locked in' },
+        { label: 'Pending', value: summary.pendingGoals, color: summary.pendingGoals > 0 ? '#fbbf24' : '#34d399', sub: summary.pendingGoals > 0 ? '⚠ needs action' : '✓ all clear' },
+      ]} />
 
       {/* Escalation banner */}
       {totalEscalations > 0 && (
@@ -356,7 +351,7 @@ export default function AdminCharts({ deptStats, quarterStats, escalations, mana
 
 function Badge({ label, color, bg }: { label: string; color: string; bg: string }) {
   return (
-    <span className="text-xs px-3 py-1 rounded-full font-semibold"
+    <span className={`text-xs px-3 py-1 rounded-full font-semibold ${label === 'Pending' ? 'pending-badge' : ''}`}
       style={{ background: bg, color }}>
       {label}
     </span>

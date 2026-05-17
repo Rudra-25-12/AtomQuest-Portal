@@ -1,3 +1,4 @@
+import AnimatedStatCards from '@/components/AnimatedStatCards'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 
@@ -43,7 +44,10 @@ export default async function EmployeeDashboard() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <p className="text-sm font-medium mb-1" style={{ color: '#fbbf24' }}>Welcome back 👋</p>
-            <h1 className="text-3xl font-black" style={{ color: '#f1f5f9' }}>{profile?.name}</h1>
+            <h1 className="text-3xl font-black"
+              style={{ color: '#f1f5f9', background: 'linear-gradient(135deg,#f1f5f9,#94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              {profile?.name}
+            </h1>
             <p className="text-sm mt-1" style={{ color: '#475569' }}>{profile?.department} · Employee</p>
           </div>
           <a href="/dashboard/employee/goals/new"
@@ -54,21 +58,12 @@ export default async function EmployeeDashboard() {
         </div>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          {[
-            { label: 'Total Goals', value: goals?.length ?? 0, color: '#60a5fa', sub: 'created' },
-            { label: 'Approved', value: approved, color: '#34d399', sub: 'by manager' },
-            { label: 'Pending', value: submitted, color: '#fbbf24', sub: 'awaiting review' },
-            { label: 'Weight Covered', value: `${totalWeight}%`, color: '#a78bfa', sub: 'approved goals' },
-          ].map(s => (
-            <div key={s.label} className="rounded-2xl p-5"
-              style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
-              <p className="text-xs font-medium mb-3" style={{ color: '#475569' }}>{s.label}</p>
-              <p className="text-3xl font-black mb-1" style={{ color: s.color }}>{s.value}</p>
-              <p className="text-xs" style={{ color: '#334155' }}>{s.sub}</p>
-            </div>
-          ))}
-        </div>
+        <AnimatedStatCards cards={[
+          { label: 'Total Goals', value: goals?.length ?? 0, color: '#60a5fa', sub: 'created' },
+          { label: 'Approved', value: approved, color: '#34d399', sub: 'by manager' },
+          { label: 'Pending', value: submitted, color: '#fbbf24', sub: 'awaiting review' },
+          { label: 'Weight Covered', value: `${totalWeight}%`, color: '#a78bfa', sub: 'approved goals' },
+        ]} />
 
         {/* Weightage progress */}
         {approved > 0 && (
@@ -115,7 +110,17 @@ export default async function EmployeeDashboard() {
 
           {!goals || goals.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-4xl mb-3">🎯</p>
+              <div className="mx-auto mb-3 w-24 h-24 rounded-3xl bg-[#111827] flex items-center justify-center"
+                style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                <svg viewBox="0 0 96 96" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="16" y="20" width="64" height="56" rx="14" fill="#1f2937" stroke="#334155" strokeWidth="2" />
+                  <path d="M30 34H66" stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M30 46H58" stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M30 58H54" stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M58 24L70 30V56" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                  <path d="M70 30L78 26V46" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                </svg>
+              </div>
               <p className="font-semibold mb-1" style={{ color: '#94a3b8' }}>No goals yet</p>
               <p className="text-sm mb-4" style={{ color: '#334155' }}>Create your first goal to get started</p>
               <a href="/dashboard/employee/goals/new"
@@ -146,7 +151,7 @@ export default async function EmployeeDashboard() {
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs px-3 py-1 rounded-full font-semibold"
+                      <span className={`text-xs px-3 py-1 rounded-full font-semibold ${sc.label === 'Pending' ? 'pending-badge' : ''}`}
                         style={{ background: sc.bg, color: sc.color }}>
                         {sc.label}
                       </span>

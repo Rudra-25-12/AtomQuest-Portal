@@ -48,8 +48,8 @@ export default function SidebarClient({ profile }: { profile: any }) {
   }
 
   return (
-    <aside className="w-60 flex flex-col shrink-0"
-      style={{ background: '#1a1f2e', borderRight: '1px solid #252d3d', minHeight: '100vh' }}>
+    <aside className="w-60 flex flex-col shrink-0 sidebar-noise"
+      style={{ borderRight: '1px solid #252d3d', minHeight: '100vh' }}>
 
       {/* Logo */}
       <div className="px-5 py-5 flex items-center gap-3"
@@ -80,13 +80,8 @@ export default function SidebarClient({ profile }: { profile: any }) {
           const isActive = pathname === link.href
           return (
             <a key={link.href} href={link.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all"
-              style={{
-                background: isActive ? 'rgba(251,191,36,0.1)' : 'transparent',
-                color: isActive ? '#fbbf24' : '#94a3b8',
-                borderLeft: isActive ? '2px solid #fbbf24' : '2px solid transparent',
-                fontWeight: isActive ? 600 : 400,
-              }}
+              className={`sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm ${isActive ? 'sidebar-link-active' : ''}`}
+              style={{ color: isActive ? '#fbbf24' : '#94a3b8' }}
               onMouseEnter={e => {
                 if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'
               }}

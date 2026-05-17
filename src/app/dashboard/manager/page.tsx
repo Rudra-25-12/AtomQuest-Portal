@@ -1,3 +1,4 @@
+import AnimatedStatCards from '@/components/AnimatedStatCards'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 
@@ -40,7 +41,10 @@ export default async function ManagerDashboard() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <p className="text-sm font-medium mb-1" style={{ color: '#fbbf24' }}>Manager Panel</p>
-            <h1 className="text-3xl font-black" style={{ color: '#f1f5f9' }}>{profile?.name}</h1>
+            <h1 className="text-3xl font-black"
+              style={{ color: '#f1f5f9', background: 'linear-gradient(135deg,#f1f5f9,#94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              {profile?.name}
+            </h1>
             <p className="text-sm mt-1" style={{ color: '#475569' }}>
               {profile?.department} · {teamMembers?.length ?? 0} direct reports
             </p>
@@ -53,21 +57,12 @@ export default async function ManagerDashboard() {
         </div>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          {[
-            { label: 'Team Size', value: teamMembers?.length ?? 0, color: '#60a5fa', sub: 'direct reports' },
-            { label: 'Pending Approval', value: submitted, color: '#fbbf24', sub: submitted > 0 ? '⚠ action needed' : '✓ all clear' },
-            { label: 'Approved Goals', value: approved, color: '#34d399', sub: 'locked in' },
-            { label: 'Check-ins Done', value: checkins?.length ?? 0, color: '#a78bfa', sub: 'across all quarters' },
-          ].map(s => (
-            <div key={s.label} className="rounded-2xl p-5"
-              style={{ background: '#1e2433', border: '1px solid #2a3347' }}>
-              <p className="text-xs font-medium mb-3" style={{ color: '#475569' }}>{s.label}</p>
-              <p className="text-3xl font-black mb-1" style={{ color: s.color }}>{s.value}</p>
-              <p className="text-xs" style={{ color: '#334155' }}>{s.sub}</p>
-            </div>
-          ))}
-        </div>
+        <AnimatedStatCards cards={[
+          { label: 'Team Size', value: teamMembers?.length ?? 0, color: '#60a5fa', sub: 'direct reports' },
+          { label: 'Pending Approval', value: submitted, color: '#fbbf24', sub: submitted > 0 ? '⚠ action needed' : '✓ all clear' },
+          { label: 'Approved Goals', value: approved, color: '#34d399', sub: 'locked in' },
+          { label: 'Check-ins Done', value: checkins?.length ?? 0, color: '#a78bfa', sub: 'across all quarters' },
+        ]} />
 
         {/* Pending alert */}
         {submitted > 0 && (
@@ -148,7 +143,7 @@ export default async function ManagerDashboard() {
                       </div>
                       <div className="flex items-center gap-2">
                         {memberPending > 0 && (
-                          <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium pending-badge"
                             style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}>
                             {memberPending} pending
                           </span>
