@@ -5,7 +5,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'AtomQuest Portal — Goal Setting & Tracking',
   description: 'In-house goal setting and tracking portal powered by Atomberg',
-  icons: { icon: '/atomquest-logo.png' },
+  icons: { icon: '/favicon.ico' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
