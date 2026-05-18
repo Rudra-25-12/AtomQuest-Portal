@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
+import AtomQuestLogo from '../../public/atomquest-logo.png'
 
 export default async function LandingPage() {
   const supabase = await createServerSupabaseClient()
@@ -26,7 +27,11 @@ export default async function LandingPage() {
         {/* Nav */}
         <nav style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 40px',borderBottom:'1px solid #1a1a1a'}}>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
-            <img src="/atomquest-logo.png" alt="AtomQuest" style={{width:36,height:36,objectFit:'contain',borderRadius:8}}/>
+            <img 
+              src={AtomQuestLogo.src} 
+              alt="AtomQuest" 
+              style={{width:36,height:36,objectFit:'contain',borderRadius:8}}
+            />
             <span style={{color:'#f1f5f9',fontWeight:900,fontSize:16}}>AtomQuest</span>
           </div>
           <a href="/login" style={{background:'linear-gradient(135deg,#fbbf24,#f97316)',color:'#0a0a0a',padding:'8px 20px',borderRadius:10,fontSize:13,fontWeight:700,textDecoration:'none'}}>
